@@ -277,11 +277,66 @@ function showProjectDetails(row) {
     }, 300);
 }
 
+// Function to parse CSV string properly
+function parseCSV(csvString) {
+    const rows = [];
+    let currentRow = [];
+    let currentField = '';
+    let insideQuotes = false;
+    let i = 0;
+
+    while (i < csvString.length) {
+        const char = csvString[i];
+
+        if (char === '"') {
+            // Handle escaped quotes (double quotes)
+            if (csvString[i + 1] === '"') {
+                currentField += '"';
+                i += 2;
+                continue;
+            }
+            // Toggle quote state
+            insideQuotes = !insideQuotes;
+            i++;
+            continue;
+        }
+
+        if (char === ',' && !insideQuotes) {
+            currentRow.push(currentField.trim());
+            currentField = '';
+            i++;
+            continue;
+        }
+
+        if (char === '\n' && !insideQuotes) {
+            currentRow.push(currentField.trim());
+            rows.push(currentRow);
+            currentRow = [];
+            currentField = '';
+            i++;
+            continue;
+        }
+
+        currentField += char;
+        i++;
+    }
+
+    // Push the last field and row if they exist
+    if (currentField) {
+        currentRow.push(currentField.trim());
+    }
+    if (currentRow.length > 0) {
+        rows.push(currentRow);
+    }
+
+    return rows;
+}
+
 // Function to process the data
 function processData(csvData) {
     try {
-        // Parse CSV data
-        const rows = csvData.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+        // Parse CSV data using the new parser
+        const rows = parseCSV(csvData);
         
         // Remove header row if it exists
         const dataRows = rows.slice(1);
